@@ -1,79 +1,125 @@
-# RoboCoders Kotlin Edition — KotlinConf
+# RoboCoders KotlinConf — Judgment Day
 
-45-minute reframe of the Arc of AI talk. Same thesis ("context, not the agent"),
-new constraints: Kotlin/JVM only, 45 minutes, Junie+Gemini Flash 3.5 vs Claude Code.
+A 45-minute mode-f live-coding showdown for KotlinConf 2026.
+**Baruch Sadogursky** (Claude Code on Opus 4.7) vs **Viktor Gamov** (Junie running Gemini Flash 3.5).
+Five stages, same prompts on both sides. Same hardware. The variable being demonstrated isn't the model — it's the context.
 
-## What's here
+Same thesis as our [Arc of AI](https://www.arcofai.com) talk earlier this year:
 
-- [presentation-outline.md](./presentation-outline.md) — 10 slides + speaker notes
-- [DEMO-SCRIPT.md](./DEMO-SCRIPT.md) — 4-stage progressive demo (Stage 0 merged into 1)
+> Both agents can write Kotlin that runs. Neither can write Kotlin that is RIGHT — until you engineer the context they both inherit. And when you delegate, you have to engineer the context PROPAGATION too — because by default, sub-agents get nothing.
 
-The original Python/Arc-of-AI demo lived in `./arc-of-ai/` during development as a reference; once the Kotlin rewrite was self-sufficient (all stages verified on hardware, plugins published to Tessl registry), the local copy was removed.
+## What's in this repo
+
+| Path | Purpose |
+|---|---|
+| [presentation-outline.md](./presentation-outline.md) | 10 slides + speaker notes, 45-min pacing |
+| [DEMO-SCRIPT.md](./DEMO-SCRIPT.md) | Full 5-stage script with audience energy map |
+| [PROMPTS.md](./PROMPTS.md) | Verbatim prompts both presenters type on stage |
+| [claude-code/ready/](./claude-code/ready/) | Kotlin/JVM runtime for Baruch's side. All 5 stages, all verified on hardware. |
+| [faces/](./faces/) | Enrollment photos for face recognition |
+| `tessl.json` | Tessl project marker. `dependencies: {}` so the live install beat does real work. |
+
+Viktor's `junie/ready/` side lives elsewhere — Viktor's repo.
+
+## Hardware on stage
+
+- **Camera**: DJI Osmo Pocket 3 (USB-C webcam mode)
+- **Bulb**: Shelly Duo GU10 RGBW (LAN HTTP, ~30 ms latency)
+- **Light bars**: 2× Govee H6056 Flow Plus (cloud REST, ~7 req/min sustained)
+- **Travel router** to isolate the venue Wi-Fi
+
+## Software stack
+
+- **JDK 21**, **Kotlin 2.3**, Gradle Kotlin DSL
+- **JavaCV 1.5.13** (OpenCV bindings) for camera capture + Haar face detection
+- **DJL 0.36** (PyTorch engine) for face_feature (ArcFace) embeddings; ONNX runtime for FER+ emotion
+- **Ktor 3.4.3** client + server (preview MJPEG stream)
+- **kotlinx-coroutines 1.10.2** + Flow for the pipeline
+- **Koog 0.7.3** ([JetBrains Kotlin-native AI agent framework](https://github.com/JetBrains/koog)) for Stage 4 sub-agent orchestration
+
+## Tessl plugins (the context engineering layer)
+
+All published. Each repo has its own README + evals. The `tessl.json` in this repo starts empty so the live demo flow shows real install activity.
+
+| Plugin | Source repo | What it teaches |
+|---|---|---|
+| [`jbaruch/govee-h6056`](https://github.com/jbaruch/govee-h6056) | language-agnostic device facts | Phantom segments, Yankee/Golf mapping, `segment[0]` is top, `rgb(1,1,1)` for off, 1.2 s cloud min-interval |
+| [`jbaruch/shelly-duo-gu10`](https://github.com/jbaruch/shelly-duo-gu10) | LAN bulb facts + Kotlin/Ktor + JmDNS | REST shape, mDNS bind-to-non-loopback-IPv4 gotcha, 0.2 s LAN min-interval |
+| [`jbaruch/face-recognition-calibration-djl`](https://github.com/jbaruch/face-recognition-calibration-djl) | empirical FaceNet calibration | Piecewise confidence `d ≤ 0.30 → 1.0, d ≥ 0.65 → 0.0`, distance bands, RGB vs BGR |
+| [`jbaruch/iot-actuator-patterns-kotlin`](https://github.com/jbaruch/iot-actuator-patterns-kotlin) | Kotlin coroutines patterns | One-coroutine-per-device debounce, 0.2 s LAN / 1.2 s cloud, `Dispatchers.IO` (not `Default`), target quantization, bottom-up progress-bar |
+| [`jbaruch/vision-pipeline-foundations-kotlin`](https://github.com/jbaruch/vision-pipeline-foundations-kotlin) | JavaCV + DJL hygiene | macOS camera probe (skip virtuals), 4× downscale for Haar, frame-skip every 3rd / 30th |
+| [`jbaruch/sub-agent-delegation`](https://github.com/jbaruch/sub-agent-delegation) | meta-plugin | Sub-agents start fresh; pass skills explicitly via `AgentDefinition(skills=[...])`; validate with echo handshake |
+
+### Closing eval number
+
+`tessl eval run` against `jbaruch/govee-h6056`: **baseline 27% → with context 100%** on Claude Sonnet 4.6, 3 scenarios. Full eval at [tessl.io/eval-runs/019e477c-22c7-75cc-a571-b342dcb578d3](https://tessl.io/eval-runs/019e477c-22c7-75cc-a571-b342dcb578d3).
+
+The other 5 Kotlin plugins also ship with leak-reviewed evals: average baseline ~57%, average with-context 100%.
+
+## How to run (from a clean clone)
+
+```bash
+git clone https://github.com/jbaruch/robocoders-kagematch.git
+cd robocoders-kagematch
+
+# Populate .env (NOT committed)
+cat > .env <<'EOF'
+SHELLY_BULB_IP=192.168.8.135
+GOVEE_API_KEY=<your-key>
+GOVEE_H6056_SKU=H6056
+GOVEE_H6056_DEVICE=<your-device-id>
+ANTHROPIC_API_KEY=<your-key>   # Stage 4 only
+EOF
+
+cd claude-code/ready
+
+# Stage 1: face detection → bulb
+MAX_SECONDS=60 CAM=1 ./gradlew runStage1
+
+# Stage 2: identity → bulb colour
+MAX_SECONDS=60 CAM=1 ./gradlew runStage2
+
+# Stage 3 — vibecoding (broken) then install plugins then re-run "fixed"
+MAX_SECONDS=60 CAM=1 ./gradlew runStage3Vibecoding
+tessl install jbaruch/govee-h6056 jbaruch/face-recognition-calibration-djl \
+              jbaruch/iot-actuator-patterns-kotlin jbaruch/vision-pipeline-foundations-kotlin
+MAX_SECONDS=60 CAM=1 ./gradlew runStage3Fixed
+
+# Stage 4 — sub-agents, vibecoding then meta-plugin then fixed
+MAX_SECONDS=60 CAM=1 ./gradlew runStage4Vibecoding
+tessl install jbaruch/sub-agent-delegation
+MAX_SECONDS=60 CAM=1 ./gradlew runStage4Fixed
+
+# Stage 4 Live — continuous pipeline with all plugins applied
+MAX_SECONDS=90 CAM=1 ./gradlew runStage4Live
+```
+
+Preview at [http://localhost:8080/](http://localhost:8080/) when any stage is running (MJPEG over Ktor server).
 
 ## Deltas vs Arc of AI
 
 | Area | Arc of AI | KotlinConf |
 |---|---|---|
 | Slot | 75 min | 45 min |
-| Agents | Claude Code (Baruch) vs Copilot (Viktor) | Claude Code vs **Junie running Gemini Flash 3.5** |
+| Agents | Claude Code (Baruch) vs Copilot (Viktor) | Claude Code (Opus 4.7) vs **Junie running Gemini Flash 3.5** |
 | Language | Python | **Kotlin/JVM 21** |
-| Vision | `face_recognition` (dlib) + HF `transformers` ViT | **DJL** (PyTorch engine): RetinaFace + FaceNet + ViT |
+| Vision | `face_recognition` (dlib) + HF `transformers` ViT | **DJL** (PyTorch + ONNX): face_feature + emotion-ferplus |
 | Camera | OpenCV (cv2) | **JavaCV** (`org.bytedeco:javacv-platform`) |
 | HTTP | `requests` | **Ktor client** + kotlinx.serialization |
 | Concurrency | threads + asyncio | **Kotlin coroutines + Flow** |
+| Sub-agent orchestrator | Claude Agent SDK (Python/TS) | **Koog** (JetBrains, Kotlin-native — no language cheat) |
 | Stage 0 | Standalone hello-world | **Merged into Stage 1** (audience can read Ktor cold) |
-| Stage 2 timing | 8 min | **4 min** (single "still a tie" beat) |
-| Stage 3 timing | 18 min | **12 min** (cut redundant code walkthroughs, use IDE diff) |
-| Stage 4 timing | 20 min | **12 min** (trim emotion enumeration) |
 
-## Plugin rework plan
+## Pre-flight checklist for the conf
 
-Source plugins lived under `arc-of-ai/tiles/` during development; the new Kotlin variants now live in `./tiles/` and are published to the Tessl registry.
+- [ ] Both laptops on JDK 21, Kotlin 2.3 cached, Gradle wrapper warmed
+- [ ] DJL native libs cached: `~/.djl.ai/cache/` populated (RetinaFace, FaceNet, ViT) — run any stage once before going on stage
+- [ ] Govee bars paired, Shelly bulb at static IP, travel router on
+- [ ] `tessl list` in `claude-code/ready/` → empty before Stage 3
+- [ ] `faces/baruch/` and `faces/viktor/` populated, or live re-enrollment ready
+- [ ] T-shirts in the room
+- [ ] Die Hard "Agent Johnson" image licensed/sourced
 
-### Device-truth plugins (language-agnostic — clean up Python references)
+## License
 
-| Plugin | Change |
-|---|---|
-| `jbaruch/govee-h6056` | Strip Python code snippets. Keep pure facts: 12 physical / 15 API / phantom 12-14, Yankee 0-5 + Golf 6-11, `segment[0]` is at top. |
-| `jbaruch/shelly-duo-gu10` *(new)* | Extract mDNS name + REST shape from current Python demo. Pure facts, no language tie. |
-
-### Calibration plugins (empirical, model-specific — re-measure)
-
-| Plugin | Change |
-|---|---|
-| `jbaruch/face-recognition-calibration-djl` *(new — replaces `face-recognition-calibration`)* | FaceNet cosine distance bands: strong 0.35-0.45, borderline 0.45-0.60, reject >0.65. Piecewise confidence: `d<=0.35→1.0`, `d>=0.65→0.0`, else `(0.65-d)/0.30`. Re-measured on our hardware/lighting. |
-
-### Code-pattern plugins (Kotlin idioms)
-
-| Plugin | Change |
-|---|---|
-| `jbaruch/iot-actuator-patterns-kotlin` *(new variant)* | Debounce via `Flow.debounce`. Quantization via rounding before Ktor call. Progress-bar bottom-up + invert segment index. |
-| `jbaruch/vision-pipeline-foundations-kotlin` *(new variant)* | JavaCV `OpenCVFrameGrabber` setup. Frame-skip via `Flow.sample(80.milliseconds)`. Coroutine-friendly closeable wrapping. |
-
-### Unchanged
-
-| Plugin | Status |
-|---|---|
-| `jbaruch/sub-agent-delegation` | Meta-plugin — language-agnostic, ships as-is. |
-
-### Retired for this version
-
-| Plugin | Reason |
-|---|---|
-| `jbaruch/progress-bar-ux` | Folded into `iot-actuator-patterns-kotlin` to keep the install beat to 4 commands. |
-| `jbaruch/rate-limited-iot-debounce` | Folded into `iot-actuator-patterns-kotlin`. |
-
-## Open risks
-
-- **Junie + Gemini Flash 3.5 behavior on the hard prompts is unmeasured.** Rehearse Stage 3 vibecoding on Junie before the conf — if it accidentally produces correct code, the aha collapses. Mitigation: be ready to swap to a deliberately under-specified prompt.
-- **DJL FaceNet weights**: confirm license and bundle in a fat JAR so first-run is offline-safe. Don't rely on conference Wi-Fi.
-- **Sub-agent orchestration on Junie's side**: Junie's multi-agent model differs from Claude Agent SDK. Stage 4 may need to narrate the parallel rather than literally run two orchestrators side-by-side. Decide before rehearsal.
-- **Stage 4 orchestrator language**: the orchestrator code (Claude Agent SDK) is still Python/TS — only the *generated* code is Kotlin. Flag this on stage so nobody thinks we cheated.
-
-## Next steps (not yet done)
-
-1. Build `./claude-code/ready/` skeleton: `build.gradle.kts`, `Stage1.kt`, `Stage2.kt`, `Stage3Vibecoding.kt`, `Stage3Fixed.kt`, `Stage4Vibecoding.kt`, `Stage4Fixed.kt`, `Stage4Live.kt`.
-2. Re-measure FaceNet distances on the actual hardware/lighting and finalize calibration plugin numbers.
-3. Pre-encode `faces/enrolled.bin` via DJL FaceNet from the existing `faces/baruch/` and `faces/viktor/` JPGs.
-4. Verify Junie + Gemini Flash 3.5 reproduces each vibecoding failure mode on cold prompts.
-5. Re-shoot Govee `tessl eval run` baseline → +context numbers with the Kotlin pipeline (the "27% → 100%" closing claim must hold for the new stack or be re-quoted).
+MIT (where applicable). Plugin repos each carry their own LICENSE file.

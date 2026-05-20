@@ -1,8 +1,0 @@
-.DS_Store
-.env
-build/
-.gradle/
-.idea/
-*.iml
-out/
-*.log
