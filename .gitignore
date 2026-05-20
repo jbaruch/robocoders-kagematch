@@ -9,10 +9,18 @@
 .vscode/
 .tessl/
 .claude/
+.agents/
+
+# Files that tessl install creates (re-created live on stage during the Stage 3 install beat).
+# Keep these gitignored so a fresh clone has zero pre-loaded plugin context, and the
+# `tessl install` beat shows real creation, not just an update.
+AGENTS.md
+CLAUDE.md
 
 # Gradle + Kotlin build outputs
 **/build/
 **/.gradle/
+**/.kotlin/
 **/out/
 
 # JetBrains IDE
