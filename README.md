@@ -43,6 +43,7 @@ All published. Each repo has its own README + evals. The `tessl.json` in this re
 
 | Plugin | Source repo | What it teaches |
 |---|---|---|
+| [`jbaruch/kotlin-tutor`](https://github.com/jbaruch/kotlin-tutor) | language + stack defaults | Kotlin 2.3, JDK 21, Gradle Kotlin DSL; Ktor for HTTP; coroutines + `Dispatchers.IO`; DJL for ML; JavaCV for vision; Koog for agents; plus idiom rules (val, data class, scope fns, Kotest). **Used in Stage 0**. |
 | [`jbaruch/govee-h6056`](https://github.com/jbaruch/govee-h6056) | language-agnostic device facts | Phantom segments, Yankee/Golf mapping, `segment[0]` is top, `rgb(1,1,1)` for off, 1.2 s cloud min-interval |
 | [`jbaruch/shelly-duo-gu10`](https://github.com/jbaruch/shelly-duo-gu10) | LAN bulb facts + Kotlin/Ktor + JmDNS | REST shape, mDNS bind-to-non-loopback-IPv4 gotcha, 0.2 s LAN min-interval |
 | [`jbaruch/face-recognition-calibration-djl`](https://github.com/jbaruch/face-recognition-calibration-djl) | empirical FaceNet calibration | Piecewise confidence `d ≤ 0.30 → 1.0, d ≥ 0.65 → 0.0`, distance bands, RGB vs BGR |

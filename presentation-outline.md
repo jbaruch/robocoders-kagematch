@@ -27,7 +27,8 @@
 
 ---
 
-## Opening Sequence [4 min, slides 1-4]
+## Opening Sequence [3 min, slides 1-4]
+*(Tightened from 4 min — Stage 0 now carries the "context engineering first impression" weight, opening can be punchier.)*
 
 ### Slide 1: Title Slide
 - Visual: Terminal dark background. Title: "RoboCoders: Judgment Day" in green monospace. Subtitle: "AI Coding Agents Face Off — Kotlin Edition"
@@ -48,23 +49,36 @@
 
 ### Slide 4: Side-picking vote + rules
 - Visual: Split screen. Left: Claude Code logo + "Team Baruch". Right: Junie logo + "Team Viktor". Center: "Pick a side. Wrong side: t-shirt anyway."
-- Speaker: [BARUCH]: "Four stages. Same task. Same hardware. Different agents. Vote now — Claude Code on Opus, or Junie on Gemini Flash 3.5? Hands. *(counts)* OK. You can change your mind at the end. There are t-shirts."
+- Speaker: [BARUCH]: "Five stages. Same prompts. Same hardware. Different agents. Vote now — Claude Code on Opus, or Junie on Gemini Flash 3.5? Hands. *(counts)* OK. You can change your mind at the end. There are t-shirts."
 - [VIKTOR]: "I always bring t-shirts. Only consistent thing about me."
-- [BARUCH]: "Today we teach our agents to identify which Agent Johnson is which. Camera, smart bulb, two light bars. In Kotlin. Simple, right? *(beat)* Yeah. It's not."
+- [BARUCH]: "Today we teach our agents to identify which Agent Johnson is which. Camera, smart bulb, two light bars. In Kotlin. *(beat)* You'd think the 'in Kotlin' part would be the easy bit."
 
 ---
 
-## Stage 1: Face Detection on Camera → Bulb [5 min]
-*(Stage 0 hello-world merged in — we go straight to "face triggers bulb")*
+## Stage 0: Opening Salvo — Pick a Language [3 min]
+
+### [DEMO 00]: "Turn on my Shelly Duo GU10"
+- Devices: Shelly bulb only
+- Prompt (both agents): *"Write a program that turns on my Shelly Duo GU10 smart bulb. The bulb is on the LAN; its IP is in the SHELLY_BULB_IP environment variable."*
+- Without any plugins, both agents emit **Python with `requests`**, or a Node snippet, or `curl`. The Kotlin Gradle project around them doesn't move the model's hand. Speaker holds the IDE up: "Notice the file. `.py`."
+- Speaker: [BARUCH]: "I asked it in a Kotlin project. It gave me Python. We haven't told it anything about us. Watch."
+- [LIVE INSTALL BEAT]: `tessl install jbaruch/kotlin-tutor` — pull up `https://tessl.io/registry/jbaruch/kotlin-tutor` on second monitor. 12 always-apply rules.
+- Re-issue the SAME prompt. Both agents now emit `build.gradle.kts` + Kotlin + Ktor client + JVM shutdown hook + the bulb actually responds.
+- Speaker: [BARUCH]: "Same prompt. Different language. Different libraries. Different file extension. One `tessl install` changed everything. **We haven't even started the camera yet.**"
+- [VIKTOR]: "And that's just the language. Wait until we hit hardware."
+
+---
+
+## Stage 1: Face Detection on Camera → Bulb [4 min]
 
 ### Slide 5: Stage 01 title card
-- Visual: Terminal header "Stage 01: Face in frame → bulb ON. JavaCV + DJL + Ktor. No fluff."
-- Speaker: [BARUCH]: "Stage one. Both agents write Kotlin that opens the camera, detects a face, hits the Shelly bulb. Coroutines, Ktor client, DJL RetinaFace. Skipping the trivial 'turn on a bulb' baseline — KotlinConf audience can read a Ktor `HttpClient` call in their sleep."
+- Visual: Terminal header "Stage 01: Face in frame → bulb stays on."
+- Speaker: [BARUCH]: "Stage one. We have a working bulb-toggler. Now I want it to react to a face."
 
 ### [DEMO 01]: Face detection → bulb on/off
 - Devices: DJI Osmo Pocket 3 + Shelly bulb
-- Prompt (both agents): *"Write a Kotlin program that turns on my Shelly bulb when a face is in the camera, off when no face. Discover the bulb via mDNS. Use JavaCV for capture, DJL for detection, Ktor for HTTP."*
-- Both agents succeed — bulb on/off works. But the FLICKER is visible.
+- Prompt (both agents): *"Extend the program so it only turns the bulb on while a face is in the camera, and off when no face is in frame."* — no mention of Kotlin, JavaCV, or Ktor. The `kotlin-tutor` install from Stage 0 already steered everything.
+- Both agents extend the Stage-0 Kotlin code with `OpenCVFrameGrabber` (JavaCV) + Haar cascade. Bulb on/off works. But the FLICKER is visible.
 - [STAGE DIRECTION: Baruch steps to frame edge for 5 seconds. Bulb strobes on/off.]
 - Preview window shows face detection boxes so audience sees what the camera sees.
 - Speaker: [BARUCH]: "See the flicker? Neither of us debounced detection intermittency. Both demos work, neither is robust. Remember this — pays off in 8 minutes."
@@ -82,7 +96,7 @@
 
 ### [DEMO 02]: Identity color mapping
 - Devices: Camera + Shelly bulb
-- Prompt (both agents): *"Identify WHO is in frame using FaceNet embeddings via DJL. Baruch → blue. Viktor → red. Both → purple. Unknown → white. No one → off. Enroll from `faces/baruch/*.jpg` and `faces/viktor/*.jpg`."*
+- Prompt (both agents): *"Extend the program so the bulb colour follows who is in frame. Baruch → blue. Viktor → red. Both → purple. Unknown → white. No one → off. Enrol from `faces/baruch/*.jpg` and `faces/viktor/*.jpg`."* — note: no mention of DJL or FaceNet. The `djl-for-jvm-ml` rule from `kotlin-tutor` already steers the agent toward DJL.
 - Both agents succeed — DJL FaceNet, cosine distance against pre-enrolled embeddings (`faces/enrolled.bin`).
 - Preview window shows face boxes with identity labels.
 - Speaker: [BARUCH]: "Bulb follows identity. Still a tie."
@@ -168,7 +182,7 @@ tessl install jbaruch/sub-agent-delegation
 
 ---
 
-## Close [8 min]
+## Close [7 min]
 
 ### Slide 10: "From vibecoding to context engineering" — CRYSTALLIZATION
 - Visual: Two-column terminal comparison.

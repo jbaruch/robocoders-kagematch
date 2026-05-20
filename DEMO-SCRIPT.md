@@ -1,9 +1,10 @@
 # RoboCoders Kotlin Edition: Progressive Demo Script
 
-A 4-stage escalation (Stage 0 hello-world merged into Stage 1).
-Each stage raises complexity.
-Stages 1-2 work **without** context — that's the "vibecoding works" baseline.
-Stages 3-4 are where vibecoding breaks and context engineering saves the demo.
+A 5-stage escalation. Each stage raises complexity:
+
+- **Stage 0** establishes that no plugin = no Kotlin (and no JavaCV / Ktor / DJL / Koog). The `jbaruch/kotlin-tutor` install converts the agent's language + library choices in one shot.
+- **Stage 1-2** work with `kotlin-tutor` installed but no other plugins. Visible Kotlin output, cracks (flicker) start to show.
+- **Stage 3-4** are where the device-specific plugins matter — vibecoding breaks dramatically on Govee specifics (Stage 3) and on Koog sub-agent context isolation (Stage 4).
 
 Each stage has:
 
@@ -22,9 +23,50 @@ Each stage has:
 
 ---
 
-## Stage 1 — "Bulb on when face in frame" (vibecoding works, cracks showing)
+## Stage 0 — "Turn on my smart bulb" (FIRST AHA — language and library)
 
-**Prompt:** `Write a Kotlin program that turns on my Shelly bulb when a face is in the camera, off when no face. Discover the bulb via mDNS. Use JavaCV for capture, DJL for detection, Ktor for HTTP.`
+**Prompt:** `Write a program that turns on my Shelly Duo GU10 smart bulb. The bulb is on the LAN; its IP is in the SHELLY_BULB_IP environment variable.`
+
+### What vibecoding produces
+
+- **Python**, `import requests`, hardcoded `http://...` URL. Sometimes `curl` one-liner. Sometimes Node + `axios`. **Never Kotlin** unless the prompt forces it.
+- The agent doesn't read the Gradle project around it. Median training-data answer wins.
+
+### The context miss
+
+The agent has no way to know "this user wants Kotlin and these libraries". There's no signal in the conversation, the project layout, or the prompt itself.
+
+### The plugin
+
+```bash
+tessl install jbaruch/kotlin-tutor
+```
+
+12 `alwaysApply` rules — 6 idiom rules (val, data class, scope fns, Kotest, extensions, nullability) and 6 stack-default rules (Kotlin 2.3 + JDK 21 + Gradle KTS, Ktor, coroutines, DJL, JavaCV, Koog).
+
+### Re-run with `kotlin-tutor` installed
+
+Same prompt. The agent now emits:
+
+- `build.gradle.kts` declaring `kotlin("jvm") version "2.3.0"` and `jvmToolchain(21)`
+- Single `*.kt` file with `suspend fun main() = runBlocking { ... }`, `HttpClient(CIO)`, `client.get("http://${System.getenv("SHELLY_BULB_IP")}/color/0?turn=on&...")`
+- Most likely: a `Runtime.getRuntime().addShutdownHook(...)` that turns the bulb off on Ctrl-C
+
+### The aha
+
+One `tessl install` changed the **file extension**. The audience watches `.py` disappear and `.kt` appear in the IDE. Speaker:
+
+> "Same prompt. Different language. Different library. Different file. The plugin didn't fix a bug — it picked a stack for me. We haven't even started the camera yet."
+
+That's the opening salvo. Carries the rest of the talk.
+
+---
+
+## Stage 1 — "Now only when there's a face" (vibecoding works, cracks showing)
+
+**Prompt:** `Extend the program so it only turns the bulb on while a face is in the camera, and off when no face is in frame.`
+
+No mention of Kotlin, JavaCV, or Ktor — all three are implicit from the `kotlin-tutor` rules installed in Stage 0.
 
 **What vibecoding produces:**
 
@@ -444,26 +486,23 @@ Silent semantic failures         |  Known empirical calibrations
 
 | Stage  | Time   | Audience energy | What they're feeling                                                               |
 |--------|--------|-----------------|------------------------------------------------------------------------------------|
-| Open   | 4 min  | warming         | Title, bios, side-pick, Die Hard gag.                                              |
-| 1      | 5 min  | mild amusement  | "Kotlin face detect + bulb. Easy. Small flicker."                                  |
+| Open   | 3 min  | warming         | Title, bios, side-pick, Die Hard gag.                                              |
+| 0      | 3 min  | **AHA #1**      | "Wait — it gave me Python in a Kotlin project? One install fixed THAT?"            |
+| 1      | 4 min  | mild amusement  | "Now in Kotlin, face detect + bulb, small flicker."                                |
 | 2      | 4 min  | engaged         | "It knows us."                                                                     |
-| 3      | 12 min | **AHA #1**      | "It said success but only lit 12 of 15? Terrifying."                               |
-| bridge | 1 min  | absorption      | "Plugins. Versioned. Installable."                                                 |
-| 4      | 12 min | **AHA #2**      | "Delegation erased everything. Sub-agents regress without plugin handoff."         |
-| Close  | 7 min  | resolution      | "Layered context: CLAUDE.md + plugins + delegation meta-plugin."                   |
+| 3      | 12 min | **AHA #2**      | "It said success but only lit 12 of 15? Terrifying."                               |
+| 4      | 12 min | **AHA #3**      | "Delegation erased everything. Sub-agents regress without plugin handoff."         |
+| Close  | 7 min  | resolution      | "Layered context: stack defaults + device truth + delegation meta-plugin."         |
 
 Total: 45 min. Q&A separate.
 
 ---
 
-## The two aha moments
+## The three aha moments
 
-1. **Vibecoding loses silently.** (Stage 3) — Every Ktor call returned 200 on commands that did nothing.
-   The agent was confident and wrong.
-   Four plugins fix correctness + liveness in one beat.
-2. **Delegation erases everything.** (Stage 4) — The moment you spawn a sub-agent, you're back to zero.
-   The concept of "emotion on Golf" collapses because the iot sub-agent has no idea what Golf IS.
-   Fix: meta-plugin that teaches the orchestrator explicit handoff.
+1. **Without context, the agent picks the wrong stack.** (Stage 0) — Asked for a Kotlin-project task, it produces Python with `requests`. `tessl install jbaruch/kotlin-tutor` changes the language, the library, and the file extension. One prompt, one install, total transformation.
+2. **Vibecoding loses silently.** (Stage 3) — Every Ktor call returned 200 on commands that did nothing. The agent was confident and wrong. Four plugins fix correctness + liveness in one beat.
+3. **Delegation erases everything.** (Stage 4) — The moment you spawn a sub-agent, you're back to zero. The concept of "emotion on Golf" collapses because the iot sub-agent has no idea what Golf IS. Fix: meta-plugin that teaches the orchestrator explicit handoff.
 
 ---
 

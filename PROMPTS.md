@@ -14,22 +14,58 @@ Before Stage 1, both agents start with **zero Tessl artifacts at the project roo
 
 ---
 
-## Stage 1 — Face detection → bulb on/off
+## Stage 0 — Opening salvo (FIRST AHA — before the first stage)
+
+The audience expects a Kotlin project to produce Kotlin code. With no plugins, it doesn't — the model defaults to the median answer in its training data.
+
+### Vibecoding prompt
 
 **Prompt (type verbatim):**
 
 ```
-Write a Kotlin program that turns on my Shelly Duo GU10 bulb when a face is detected
-in the camera and turns it off when no face is in frame. Use JavaCV for camera capture
-and face detection, and Ktor for the HTTP calls to the bulb. The bulb IP is in the
-SHELLY_BULB_IP env var.
+Write a program that turns on my Shelly Duo GU10 smart bulb. The bulb is on the LAN;
+its IP is in the SHELLY_BULB_IP environment variable.
 ```
 
-**Expected emission:** Haar cascade via `OpenCVFrameGrabber` + Ktor `client.get("http://$ip/color/0?...")`. No persistence, no debounce.
+**What the agents emit without plugins:** Python with `import requests`, or a one-line `curl` shell script, or sometimes Node with `axios`. **Anything but Kotlin.** The Gradle project around them does not move the model's hand on language choice; training-data median wins.
 
-**Demo beat:** the bulb flickers visibly when the speaker steps to the edge of the frame. This is intentional foreshadowing — the persistence/debounce gap will be paid off in Stage 3.
+### Plugin install beat
 
-> No `tessl install` for this stage.
+```
+tessl install jbaruch/kotlin-tutor
+tessl list
+```
+
+The single tile installs 12 `alwaysApply` rules — six idiom rules (`prefer-val`, `data-class`, etc.) and six stack-default rules (`kotlin-stack-defaults`, `ktor-for-http`, `coroutines-for-concurrency`, `djl-for-jvm-ml`, `javacv-for-vision`, `koog-for-agents`).
+
+### Fixed prompt (same as vibecoding)
+
+Re-issue the IDENTICAL Stage 0 prompt. The agent now emits:
+
+- A `build.gradle.kts` with `kotlin("jvm") version "2.3.0"`, JDK 21 toolchain, `io.ktor:ktor-client-cio` dependency
+- A Kotlin file with `suspend fun main() = runBlocking { ... }`, Ktor `HttpClient(CIO)`, `client.get("http://${System.getenv("SHELLY_BULB_IP")}/color/0?turn=on&...")`
+- Probably a JVM shutdown hook that turns the bulb off on Ctrl-C
+
+**Demo beat:** one `tessl install` changed both the LANGUAGE and the LIBRARY without changing a word of the prompt. That's the headline — and we haven't even started the camera yet.
+
+---
+
+## Stage 1 — Face detection → bulb on/off
+
+**Prompt:**
+
+```
+Extend the program so it only turns the bulb on while a face is in the camera, and
+off when no face is in frame.
+```
+
+The prompt no longer names Kotlin, JavaCV, or Ktor — `jbaruch/kotlin-tutor` already steered all three. Stage 1 is shorter and the audience SEES that the explicit-instruction load is going down as context goes up.
+
+**Expected emission:** `OpenCVFrameGrabber` + Haar cascade + the existing Ktor client edge-triggering the bulb. No persistence, no debounce.
+
+**Demo beat:** the bulb flickers visibly when the speaker steps to the edge of the frame. Intentional foreshadowing — the persistence/debounce gap pays off in Stage 3.
+
+> No further `tessl install` for this stage.
 
 ---
 
@@ -45,15 +81,16 @@ Extend the program so the bulb colour follows who is in frame.
   - someone unknown → white
   - nobody → off
 
-Enrol from JPEGs in ./faces/baruch/ and ./faces/viktor/. Use DJL with the face_feature
-model for the embeddings.
+Enrol from JPEGs in ./faces/baruch/ and ./faces/viktor/.
 ```
+
+No DJL mention — `kotlin-tutor`'s `djl-for-jvm-ml` rule already steered the agent toward DJL for on-JVM ML work.
 
 **Expected emission:** DJL `Criteria` for `face_feature` (PyTorch engine), cosine distance comparison against averaged enrollment embeddings, identity → RGB mapping, edge-triggered bulb writes.
 
 **Demo beat:** both agents recognise both presenters cleanly. "Still a tie."
 
-> No `tessl install` for this stage either. Stage 2 is the bait before the hook.
+> No further `tessl install` for this stage either. Stage 2 is the bait before the hook.
 
 ---
 
@@ -66,8 +103,10 @@ model for the embeddings.
 ```
 Drive a confidence display on the Govee H6056 light bars. Show how sure the system is
 that someone known is in frame as a 3-level semaphore: bottom red (system on),
-middle yellow (medium match), top green (strong match). Use Ktor for the cloud API.
+middle yellow (medium match), top green (strong match).
 ```
+
+Ktor is implicit now (kotlin-tutor's `ktor-for-http` rule). The Govee H6056 name is essential — the agent needs to know *which* device, and at this stage no device-truth plugin is installed yet.
 
 **What the agents emit without plugins** (all 4 bugs land, both Claude Code and Junie):
 
@@ -112,12 +151,13 @@ On the bars: clean red→yellow→green Yankee, Golf dark, 30 fps preview.
 **Prompt:**
 
 ```
-Decompose Stage 3 into sub-agents using Koog. One sub-agent for vision (confidence
-calibration), one for IoT (driving the bars), one for evaluation (stability). Add an
-emotion classifier on the other bar (Golf): happy=yellow, sad=blue, angry=red,
-neutral=gray, surprise=cyan, fear=purple, disgust=green. Use a DJL ONNX model for
-emotion.
+Decompose Stage 3 into sub-agents. One sub-agent for vision (confidence calibration),
+one for IoT (driving the bars), one for evaluation (stability). Add an emotion
+classifier on the other bar (Golf): happy=yellow, sad=blue, angry=red, neutral=gray,
+surprise=cyan, fear=purple, disgust=green.
 ```
+
+Koog is implicit (kotlin-tutor's `koog-for-agents` rule). DJL is implicit (`djl-for-jvm-ml`). The prompt is now down to "what to build", not "what to build it with".
 
 **What the agents emit without `sub-agent-delegation`:**
 
@@ -171,13 +211,16 @@ Companion evals for the other Kotlin plugins (averaging +50 lift) live at:
 
 The prompts deliberately do **not** mention:
 
-- "phantom segments", "Yankee", "Golf", "12 physical" — these are device facts the `govee-h6056` plugin teaches
-- "piecewise", "0.30", "0.65", "calibration" — these are the `face-recognition-calibration-djl` band
+- "Kotlin", "Ktor", "JavaCV", "DJL", "Koog", "Gradle Kotlin DSL", "coroutines" — these are stack defaults the `jbaruch/kotlin-tutor` plugin teaches (Stage 0 install)
+- "phantom segments", "Yankee", "Golf", "12 physical" — device facts the `govee-h6056` plugin teaches
+- "piecewise", "0.30", "0.65", "calibration" — the `face-recognition-calibration-djl` band
 - "debounce controller", "stability filter", "1.2 s min-interval", "Dispatchers.IO" — `iot-actuator-patterns-kotlin` patterns
 - "4x downscale", "frame skip", "Haar false-positives" — `vision-pipeline-foundations-kotlin` patterns
 - "fresh context", "explicit skill passing", "AgentDefinition skills" — `sub-agent-delegation` meta-plugin
 
-The prompts describe **what the operator wants visible on the bars**, not **how to achieve it**. The plugins supply the how. If a vibecoding agent accidentally hits the right answer on a particular constant, the OTHER three bugs still land — the aha holds.
+Each prompt names ONLY: (a) the device being targeted (Shelly bulb, Govee bars) so the agent can construct the right HTTP, and (b) the visible behavior the operator wants. **The plugins supply everything between**. If a vibecoding agent accidentally hits the right answer on a particular constant, the OTHER bugs still land — the aha holds.
+
+As the talk progresses, **the prompts get SHORTER**, not longer. Stage 0's prompt is one sentence. Stage 1's is one sentence. Stage 2's lists colours but doesn't say how. That's the visual proof: more context, fewer instructions.
 
 ## What to do if vibecoding accidentally works
 
