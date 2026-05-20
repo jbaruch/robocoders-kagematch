@@ -113,9 +113,14 @@ Preview at [http://localhost:8080/](http://localhost:8080/) when any stage is ru
 ## Pre-flight checklist for the conf
 
 - [ ] Both laptops on JDK 21, Kotlin 2.3 cached, Gradle wrapper warmed
-- [ ] DJL native libs cached: `~/.djl.ai/cache/` populated (RetinaFace, FaceNet, ViT) — run any stage once before going on stage
+- [ ] DJL native libs cached: `~/.djl.ai/cache/` populated (FaceNet, FER+) — run any stage once before going on stage
 - [ ] Govee bars paired, Shelly bulb at static IP, travel router on
-- [ ] `tessl list` in `claude-code/ready/` → empty before Stage 3
+- [ ] **Zero Tessl context at the project root before Stage 3** — verify with:
+  ```bash
+  ls AGENTS.md CLAUDE.md .mcp.json .tessl 2>/dev/null   # should print nothing
+  cat tessl.json | jq .dependencies                      # should print {}
+  ```
+  If any of those exist, run `rm -f AGENTS.md CLAUDE.md .mcp.json && rm -rf .tessl` to reset. The Stage 3/4 aha depends on the agent having no plugin context until the live `tessl install` beat creates it.
 - [ ] `faces/baruch/` and `faces/viktor/` populated, or live re-enrollment ready
 - [ ] T-shirts in the room
 - [ ] Die Hard "Agent Johnson" image licensed/sourced

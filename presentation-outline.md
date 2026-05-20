@@ -201,7 +201,7 @@ tessl install jbaruch/sub-agent-delegation
 - [ ] Both laptops have JDK 21, Gradle wrapper warmed, DJL native libs cached
 - [ ] `faces/enrolled.bin` (FaceNet embeddings, pre-computed) on both machines
 - [ ] Govee bars paired, Shelly bulb at static IP, travel router on
-- [ ] `tessl list` in each `live/` directory → EMPTY before Stage 3
+- [ ] **No Tessl artifacts at project root** on either laptop (`ls AGENTS.md CLAUDE.md .mcp.json .tessl` returns nothing, `tessl.json` has `dependencies: {}`). The live `tessl install` beat in Stage 3 must create these from scratch so the audience sees real install activity.
 - [ ] T-shirts in the room
 - [ ] Die Hard "Agent Johnson" image licensed/sourced
 

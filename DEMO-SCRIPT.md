@@ -487,7 +487,7 @@ cd <claude-code|junie>/live
 - [ ] Camera index probe Kotlin one-liner: `OpenCVFrameGrabber(0).apply { start(); grab(); stop() }` — note today's index
 - [ ] `faces/enrolled.bin` present (pre-computed FaceNet embeddings, skips first-run encoding)
 - [ ] DJL native libs cached: `~/.djl.ai/cache/` populated for RetinaFace + FaceNet + ViT
-- [ ] `tessl list` in `live/` → EMPTY (zero plugins before Stage 3)
+- [ ] **No Tessl artifacts in the project root**: `ls AGENTS.md CLAUDE.md .mcp.json .tessl 2>/dev/null` prints nothing, `cat tessl.json | jq .dependencies` prints `{}`. `tessl list` shows "No tiles in manifest". If artifacts leaked in from a previous run: `rm -f AGENTS.md CLAUDE.md .mcp.json && rm -rf .tessl`.
 - [ ] Terminal/IDE font size bumped for the back row
 - [ ] Side-by-side IDE diff view rehearsed for Stage 3
 

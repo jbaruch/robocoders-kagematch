@@ -8,7 +8,7 @@ The exact prompts both presenters type into their coding agent on stage. Vibecod
 
 ## Pre-flight
 
-Before Stage 1, both agents start with `tessl list` showing zero plugins. The IDE is open on an empty `claude-code/ready/` (or `junie/ready/`) Kotlin Gradle project — `build.gradle.kts` with Kotlin 2.3 + JDK 21 only.
+Before Stage 1, both agents start with **zero Tessl artifacts at the project root** — no `AGENTS.md`, no `CLAUDE.md`, no `.mcp.json`, no `.tessl/`. The `tessl.json` exists with `dependencies: {}` so the live `tessl install` beat in Stage 3 has a project to land into. `tessl list` confirms "No tiles in manifest". The IDE is open on the Kotlin Gradle project under `claude-code/ready/` (`build.gradle.kts` with Kotlin 2.3 + JDK 21).
 
 `.env` is populated with `SHELLY_BULB_IP`, `GOVEE_API_KEY`, `GOVEE_H6056_SKU`, `GOVEE_H6056_DEVICE`, `ANTHROPIC_API_KEY`. Camera (DJI Osmo Pocket 3 USB-C webcam mode) is plugged in, faces are pre-enrolled under `./faces/baruch/` and `./faces/viktor/`.
 
