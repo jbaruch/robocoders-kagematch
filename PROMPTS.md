@@ -23,8 +23,7 @@ The audience expects a Kotlin project to produce Kotlin code. With no plugins, i
 **Prompt (type verbatim):**
 
 ```
-Write a program that turns on my Shelly Duo GU10 smart bulb. The bulb is on the LAN;
-its IP is in the SHELLY_BULB_IP environment variable.
+Write a program that turns on my Shelly Duo GU10 smart bulb. The bulb is on the LAN; its IP is in the SHELLY_BULB_IP environment variable.
 ```
 
 **What the agents emit without plugins:** Python with `import requests`, or a one-line `curl` shell script, or sometimes Node with `axios`. **Anything but Kotlin.** The Gradle project around them does not move the model's hand on language choice; training-data median wins.
@@ -55,8 +54,7 @@ Re-issue the IDENTICAL Stage 0 prompt. The agent now emits:
 **Prompt:**
 
 ```
-Extend the program so it only turns the bulb on while a face is in the camera, and
-off when no face is in frame.
+Extend the program so it only turns the bulb on while a face is in the camera, and off when no face is in frame.
 ```
 
 The prompt no longer names Kotlin, JavaCV, or Ktor — `jbaruch/kotlin-tutor` already steered all three. Stage 1 is shorter and the audience SEES that the explicit-instruction load is going down as context goes up.

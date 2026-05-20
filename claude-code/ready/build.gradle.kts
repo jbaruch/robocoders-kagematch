@@ -35,7 +35,7 @@ application {
     mainClass = "Stage1Kt"
 }
 
-val stages = listOf("Stage1", "Stage2", "Stage3Vibecoding", "Stage3Fixed", "Stage4Vibecoding", "Stage4Fixed", "Stage4Live", "KoogHello")
+val stages = listOf("Stage0Test", "Stage1", "Stage2", "Stage3Vibecoding", "Stage3Fixed", "Stage4Vibecoding", "Stage4Fixed", "Stage4Live", "KoogHello")
 stages.forEach { stage ->
     tasks.register<JavaExec>("run${stage}") {
         group = "application"
