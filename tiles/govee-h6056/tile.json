@@ -1,0 +1,16 @@
+{
+  "name": "jbaruch/govee-h6056",
+  "version": "0.2.0",
+  "summary": "Ground truth for Govee Flow Plus Light Bars (H6056): phantom segments, bar-to-segment mapping, API auth and rate limits. Language-agnostic facts; Kotlin reference example.",
+  "private": false,
+  "rules": {
+    "govee-h6056-gotchas": {
+      "rules": "rules/govee-h6056-gotchas.md"
+    }
+  },
+  "skills": {
+    "govee-h6056-control": {
+      "path": "skills/govee-h6056-control/SKILL.md"
+    }
+  }
+}

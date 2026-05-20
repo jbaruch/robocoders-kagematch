@@ -1,0 +1,19 @@
+{
+  "name": "jbaruch/vision-pipeline-foundations-kotlin",
+  "version": "0.1.0",
+  "summary": "Hygiene for JavaCV + DJL vision pipelines on Kotlin/JVM: camera discovery and probing, frame-skip policy for heavy inference, downscale-before-detection. Replaces the Python jbaruch/vision-pipeline-foundations tile.",
+  "private": false,
+  "rules": {
+    "vision-pipeline-foundations-kotlin-rules": {
+      "rules": "rules/vision-pipeline-foundations-kotlin-rules.md"
+    }
+  },
+  "skills": {
+    "camera-setup-javacv": {
+      "path": "skills/camera-setup-javacv/SKILL.md"
+    },
+    "frame-skip-policy-kotlin": {
+      "path": "skills/frame-skip-policy-kotlin/SKILL.md"
+    }
+  }
+}

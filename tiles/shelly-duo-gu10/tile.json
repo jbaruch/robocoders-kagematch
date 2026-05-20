@@ -1,0 +1,16 @@
+{
+  "name": "jbaruch/shelly-duo-gu10",
+  "version": "0.1.0",
+  "summary": "Ground truth for Shelly Duo GU10 RGBW smart bulb (Gen1): LAN HTTP REST contract, mDNS discovery (with the non-loopback-IPv4-bind gotcha), color/temp endpoints, off semantics, latency expectations. Language-agnostic facts; Kotlin/Ktor reference example.",
+  "private": false,
+  "rules": {
+    "shelly-duo-gu10-gotchas": {
+      "rules": "rules/shelly-duo-gu10-gotchas.md"
+    }
+  },
+  "skills": {
+    "shelly-duo-gu10-control": {
+      "path": "skills/shelly-duo-gu10-control/SKILL.md"
+    }
+  }
+}

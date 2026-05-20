@@ -1,0 +1,16 @@
+{
+  "name": "jbaruch/face-recognition-calibration-djl",
+  "version": "0.1.0",
+  "summary": "Empirical calibration for DJL face_feature (ArcFace/FaceNet 512-d) embeddings: cosine distance bands, piecewise confidence formula, enrollment quality targets. Replaces the dlib-based jbaruch/face-recognition-calibration tile for Kotlin/JVM pipelines.",
+  "private": false,
+  "rules": {
+    "face-recognition-calibration-djl-rules": {
+      "rules": "rules/face-recognition-calibration-djl-rules.md"
+    }
+  },
+  "skills": {
+    "face-recognition-confidence-djl": {
+      "path": "skills/face-recognition-confidence-djl/SKILL.md"
+    }
+  }
+}
