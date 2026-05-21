@@ -3,10 +3,20 @@
  * see whether the agent picks Python or Kotlin.
  */
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.message.MessagePart
 import kotlinx.coroutines.runBlocking
 import java.io.File
+
+private fun stage0AnthropicExecutor(apiKey: String) =
+    PromptExecutor.builder().anthropic(apiKey).build()
+
+private val stage0PassthroughStrategy = functionalStrategy<String, String> { input ->
+    val response = requestLLM(input)
+    response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+}
 
 private const val PROMPT =
     "Write a program that turns on my Shelly Duo GU10 smart bulb. " +
@@ -21,8 +31,9 @@ fun main() = runBlocking {
     println("  PHASE A — VIBECODING (no jbaruch/kotlin-tutor)")
     println("======================================================================")
     val vibecoding = AIAgent(
-        promptExecutor = simpleAnthropicExecutor(key),
+        promptExecutor = stage0AnthropicExecutor(key),
         llmModel = AnthropicModels.Sonnet_4,
+        strategy = stage0PassthroughStrategy,
         systemPrompt = "You are a senior software engineer. Write production-ready code for the user's request. Pick the language and libraries you think best fit."
     )
     val vibecodingOut = vibecoding.run(PROMPT)
@@ -45,8 +56,9 @@ fun main() = runBlocking {
         ?: error("rulesDir found but listFiles returned null: ${rulesDir.absolutePath}")
     println("[fixed] loaded ${rulesText.length} chars of kotlin-tutor rules from ${rulesDir.absolutePath}")
     val fixed = AIAgent(
-        promptExecutor = simpleAnthropicExecutor(key),
+        promptExecutor = stage0AnthropicExecutor(key),
         llmModel = AnthropicModels.Sonnet_4,
+        strategy = stage0PassthroughStrategy,
         systemPrompt = """
             You are a senior software engineer. Write production-ready code for the user's request. Pick the language and libraries you think best fit.
 

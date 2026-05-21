@@ -11,10 +11,20 @@
  * deterministically — no arbitrary code is evaluated.
  */
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.message.MessagePart
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+
+private fun anthropicExecutor(apiKey: String) =
+    PromptExecutor.builder().anthropic(apiKey).build()
+
+private val passthroughStrategy = functionalStrategy<String, String> { input ->
+    val response = requestLLM(input)
+    response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+}
 
 // --- Structured outputs ---
 
@@ -59,26 +69,17 @@ Output ONLY a single JSON object. No prose before or after.
 No markdown code fences. No "Here is the JSON:" preamble. Just the raw JSON.
 """
 
-private fun visionAgent(apiKey: String, systemPrompt: String): AIAgent<String, String> =
+private fun buildAgent(apiKey: String, systemPrompt: String): AIAgent<String, String> =
     AIAgent(
-        promptExecutor = simpleAnthropicExecutor(apiKey),
+        promptExecutor = anthropicExecutor(apiKey),
         llmModel = AnthropicModels.Sonnet_4,
+        strategy = passthroughStrategy,
         systemPrompt = systemPrompt
     )
 
-private fun iotAgent(apiKey: String, systemPrompt: String): AIAgent<String, String> =
-    AIAgent(
-        promptExecutor = simpleAnthropicExecutor(apiKey),
-        llmModel = AnthropicModels.Sonnet_4,
-        systemPrompt = systemPrompt
-    )
-
-private fun evalAgent(apiKey: String, systemPrompt: String): AIAgent<String, String> =
-    AIAgent(
-        promptExecutor = simpleAnthropicExecutor(apiKey),
-        llmModel = AnthropicModels.Sonnet_4,
-        systemPrompt = systemPrompt
-    )
+private fun visionAgent(apiKey: String, systemPrompt: String) = buildAgent(apiKey, systemPrompt)
+private fun iotAgent(apiKey: String, systemPrompt: String) = buildAgent(apiKey, systemPrompt)
+private fun evalAgent(apiKey: String, systemPrompt: String) = buildAgent(apiKey, systemPrompt)
 
 // --- VIBECODING variants (no plugin context) ---
 

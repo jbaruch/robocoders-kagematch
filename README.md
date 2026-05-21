@@ -35,7 +35,7 @@ Viktor's `junie/ready/` side lives elsewhere — Viktor's repo.
 - **DJL 0.36** (PyTorch engine) for face_feature (ArcFace) embeddings; ONNX runtime for FER+ emotion
 - **Ktor 3.4.3** client + server (preview MJPEG stream)
 - **kotlinx-coroutines 1.10.2** + Flow for the pipeline
-- **Koog 0.8.0** ([JetBrains Kotlin-native AI agent framework](https://github.com/JetBrains/koog)) for Stage 4 sub-agent orchestration. (Koog 1.0.0-preview3 is the JetBrains-recommended pre-release, but ships a builder + strategy DSL that's a substantial API break; sticking on 0.8.0 keeps the demo on the stable line.)
+- **Koog 1.0.0-preview3** ([JetBrains Kotlin-native AI agent framework](https://github.com/JetBrains/koog)) for Stage 4 sub-agent orchestration. The 1.0 line replaces the constructor-based `AIAgent(...)` with `AIAgent(promptExecutor, llmModel, strategy, ...)` + `functionalStrategy<I, O> { input -> requestLLM(input) ... }`, and replaces `simpleAnthropicExecutor` with `PromptExecutor.builder().anthropic(key).build()`. All migrations applied.
 
 ## Tessl plugins (the context engineering layer)
 
