@@ -24,7 +24,10 @@ dependencies {
     implementation("ai.djl.onnxruntime:onnxruntime-engine")
 
     // Koog — JetBrains Kotlin-native AI agent framework (Stage 4 sub-agent orchestration)
-    implementation("ai.koog:koog-agents:0.7.3")
+    // 1.0.0-preview3 is the JetBrains-recommended pre-release, but it ships a builder + strategy
+    // DSL that's a substantial API break from our current code. Sticking on the latest stable
+    // (0.8.0) — same AIAgent(promptExecutor, llmModel, systemPrompt) constructor we already use.
+    implementation("ai.koog:koog-agents:0.8.0")
 }
 
 kotlin {
