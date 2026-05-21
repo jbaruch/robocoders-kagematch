@@ -26,6 +26,30 @@ private val passthroughStrategy = functionalStrategy<String, String> { input ->
     response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
 }
 
+/**
+ * Read a plugin's rules from the local Tessl install. The Fixed sub-agents inject this
+ * content into their system prompt at agent-creation time, so the rules stay authoritative
+ * on disk (in the installed plugin directory) — not copy-pasted into this file.
+ *
+ * Koog 1.0.0-preview3 does not have a native "skills" concept (see
+ * https://github.com/JetBrains/koog/issues/1383). When it lands, this can be replaced
+ * with a real skill registration call. Until then, file-read + system-prompt injection
+ * is the fallback the sub-agent-delegation meta-plugin prescribes.
+ */
+private fun readSkillRules(pluginName: String): String {
+    val tileDir = listOf(
+        java.io.File(".tessl/tiles/jbaruch/$pluginName"),
+        java.io.File("../../.tessl/tiles/jbaruch/$pluginName"),
+        java.io.File("/Users/jbaruch/Projects/robocoders-kagematch/.tessl/tiles/jbaruch/$pluginName")
+    ).firstOrNull { it.isDirectory }
+        ?: error("Plugin not installed: jbaruch/$pluginName. Run `tessl install jbaruch/$pluginName` from the project root before invoking Stage 4 Fixed sub-agents.")
+    val rulesDir = java.io.File(tileDir, "rules")
+    return rulesDir.listFiles { f -> f.extension == "md" }
+        ?.sortedBy { it.name }
+        ?.joinToString("\n\n---\n\n") { it.readText() }
+        ?: ""
+}
+
 // --- Structured outputs ---
 
 @Serializable
@@ -161,15 +185,8 @@ fun visionAgentFixed(apiKey: String) = visionAgent(
     """
     You are the vision sub-agent in a face-recognition pipeline.
 
-    SKILL HANDED OVER FROM PARENT (face-recognition-calibration-djl):
-      For DJL face_feature embeddings (ArcFace-derived, 512-d, cosine distance),
-      use a PIECEWISE mapping calibrated empirically:
-        d ≤ 0.30 → confidence = 1.0   (strong)
-        d ≥ 0.65 → confidence = 0.0   (reject)
-        else      → confidence = (0.65 - d) / 0.35
-      AVOID the textbook formula  conf = 1 - d / tolerance — it compresses strong
-      matches into the mid band (at d=0.30 it returns 0.50, which is "yellow" in any
-      3-band semaphore).
+    SKILL HANDED OVER FROM PARENT (read from installed plugin jbaruch/face-recognition-calibration-djl):
+    ${readSkillRules("face-recognition-calibration-djl")}
 
     Decide the mapping (you have the skill — apply it). Output JSON:
     {
@@ -189,15 +206,8 @@ fun iotAgentFixed(apiKey: String) = iotAgent(
     """
     You are the IoT sub-agent driving Govee H6056 light bars.
 
-    SKILL HANDED OVER FROM PARENT (govee-h6056):
-      - Govee H6056 advertises 15 segments. PHYSICAL TRUTH: only 12 exist (indices 0..11).
-        Indices 12, 13, 14 are phantom — API returns 200 OK but no light.
-      - Two physical bars share the address space:
-          Yankee bar: segments 0..5
-          Golf bar:   segments 6..11
-      - Within each bar, segment[0] is at the TOP. Bottom-up fill = high→low index.
-      - rgb=(0,0,0) is unreliable as "off" on this firmware (some paths treat 0x000000
-        as no-op and silently retain prior state). Use rgb=(1,1,1) for off.
+    SKILL HANDED OVER FROM PARENT (read from installed plugin jbaruch/govee-h6056):
+    ${readSkillRules("govee-h6056")}
 
     Decide the segment-to-zone mapping for a 3-level (RED/YELLOW/GREEN) semaphore on
     Yankee and an emotion display on Golf. Output JSON:
@@ -222,12 +232,8 @@ fun evalAgentFixed(apiKey: String) = evalAgent(
     """
     You are the evaluation sub-agent.
 
-    SKILL HANDED OVER FROM PARENT (iot-actuator-patterns-kotlin / debounce-controller):
-      - For a real-time producer (camera loop at ~10 Hz) driving a rate-limited actuator,
-        require a stability filter of 2 consecutive ticks before committing.
-      - Tick duration 0.4 s.
-      - Without this filter, a noisy producer that flickers between levels per-frame
-        will cause the actuator to strobe and burn rate-limit budget.
+    SKILL HANDED OVER FROM PARENT (read from installed plugin jbaruch/iot-actuator-patterns-kotlin):
+    ${readSkillRules("iot-actuator-patterns-kotlin")}
 
     Decide a stability filter. Output JSON:
     {
